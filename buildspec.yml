@@ -1,0 +1,39 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.x  # Python runtime for Lambda
+    commands:
+      # Install dependencies if needed for Lambda
+      echo "Installing dependencies..."
+      pip install -r Dynamic/requirements.txt || true  # No dependencies here, but keep for future expansion.
+
+  pre_build:
+    commands:
+      echo "Preparing for deployment..."
+
+  build:
+    commands:
+      echo "Building files..."
+
+  post_build:
+    commands:
+      - echo "Deploying static website to S3"
+      # Sync files to S3 with the correct content type for HTML files
+      - aws s3 cp Static/ s3://aws-sksu-poc-staticpage-codepipeline-test-01/ --recursive --exclude "*" --include "*.html" --content-type "text/html" --metadata-directive REPLACE
+      # Optionally, add more commands to set content types for other files (e.g., CSS, JS)
+      - aws s3 cp Static/ s3://aws-sksu-poc-staticpage-codepipeline-test-01/ --recursive --exclude "*" --include "*.css" --content-type "text/css" --metadata-directive REPLACE
+      - aws s3 cp Static/ s3://aws-sksu-poc-staticpage-codepipeline-test-01/ --recursive --exclude "*" --include "*.js" --content-type "application/javascript" --metadata-directive REPLACE
+      
+      # Deploy dynamic files to Lambda
+      - echo "Deploying dynamic files to Lambda..."
+      - cd Dynamic  # Go into the Dynamic folder
+      - zip -r ../dynamic.zip .  # Zip all contents in the Dynamic directory
+      - cd ..  # Return to the original directory
+      - aws lambda update-function-code --function-name aws-sksu-poc-staticpage-lambda-codepipeline-test-01 --zip-file fileb://dynamic.zip
+      - echo "Lambda deployment complete"
+
+artifacts:
+  files:
+    - '**/*'
