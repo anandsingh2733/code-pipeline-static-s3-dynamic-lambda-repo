@@ -1,0 +1,12 @@
+version: 0.0
+resources:
+  - myLambdaFunction:
+      type: AWS::Lambda::Function
+      properties:
+        name: codepipeline-dynamic-lambda  # Replace with your Lambda function's name
+        alias: live  # You can use an alias for versioning (e.g., live or prod)
+        description: "My Lambda function deployment"
+        runtime: python3.8  # Replace with the runtime of your Lambda function
+        handler: lambda_function.lambda_handler  # Replace with your handler function
+        timeout: 10  # Timeout for the function
+        memorySize: 128  # Memory allocation for the function
